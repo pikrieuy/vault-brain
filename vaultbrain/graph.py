@@ -107,8 +107,10 @@ class VaultGraph:
             return []
 
     def save_to_sqlite(self, db_path: str):
-        conn = sqlite3.connect(db_path)
+        conn = sqlite3.connect(db_path, timeout=30.0)
         cur = conn.cursor()
+        cur.execute("PRAGMA journal_mode=WAL;")
+        cur.execute("PRAGMA busy_timeout=30000;")
 
         cur.execute("DROP TABLE IF EXISTS edges;")
         cur.execute("DROP TABLE IF EXISTS nodes;")
@@ -153,8 +155,9 @@ class VaultGraph:
     @classmethod
     def load_from_sqlite(cls, db_path: str) -> VaultGraph:
         vg = cls()
-        conn = sqlite3.connect(db_path)
+        conn = sqlite3.connect(db_path, timeout=30.0)
         cur = conn.cursor()
+        cur.execute("PRAGMA busy_timeout=30000;")
 
         cur.execute("SELECT id, type, label, source_file FROM nodes;")
         for node_id, node_type, label, source_file in cur.fetchall():

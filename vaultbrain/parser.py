@@ -108,7 +108,7 @@ def parse_markdown_file(file_path: str, vault_root: str) -> Note:
         target_clean, has_sec, section_part = target_part.partition("#")
         section = section_part.strip() if has_sec else None
 
-        # Clean target name (remove .md if present)
+        # Clean and sanitize target name
         target = target_clean.strip()
         if target.endswith(".md"):
             target = target[:-3].strip()
@@ -116,6 +116,20 @@ def parse_markdown_file(file_path: str, vault_root: str) -> Note:
         if not target and section:
             # Anchor link to self
             target = file_stem
+
+        # Sanitize path traversal in target
+        target = target.replace("\\", "/").strip()
+        while "../" in target:
+            target = target.replace("../", "")
+        target = target.lstrip("/")
+
+        # Normalize directory path to note stem if it contains subdirectories
+        if "/" in target:
+            target = os.path.basename(target).strip()
+
+        # If target is still empty, skip this malformed link
+        if not target:
+            continue
 
         link_key = (target, section, alias)
         if link_key not in seen_links:

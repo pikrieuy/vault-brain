@@ -53,14 +53,30 @@ def infer_entity_type(note: Note) -> str:
 
 
 def extract_context_sentence(content: str, target: str) -> str:
-    """Extract the sentence containing the wikilink target as evidence."""
-    escaped = re.escape(target)
-    # Match sentence containing [[target...]]
-    pattern = rf"([^.?!;\n]*\[\[{escaped}[^\]]*\]\][^.?!;\n]*)"
-    m = re.search(pattern, content, re.IGNORECASE)
-    if m:
-        return m.group(1).strip()
-    return ""
+    """Extract the sentence containing the wikilink target as evidence safely with bounded window."""
+    if not target or not content:
+        return ""
+
+    # Safe bounded window search instead of unbounded regex to prevent ReDoS on large files
+    needle = f"[[{target}"
+    idx = content.lower().find(needle.lower())
+    if idx == -1:
+        idx = content.lower().find(target.lower())
+        if idx == -1:
+            return ""
+
+    start = max(0, idx - 100)
+    end = min(len(content), idx + len(target) + 100)
+
+    chunk = content[start:end]
+    first_nl = chunk.rfind("\n", 0, idx - start)
+    if first_nl != -1:
+        chunk = chunk[first_nl + 1:]
+    last_nl = chunk.find("\n", max(0, idx - start))
+    if last_nl != -1:
+        chunk = chunk[:last_nl]
+
+    return chunk.strip()
 
 
 def infer_relation(src_type: str, dst_type: str, context: str) -> str:
