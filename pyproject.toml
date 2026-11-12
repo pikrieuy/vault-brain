@@ -1,0 +1,15 @@
+[project]
+name = "vaultbrain"
+version = "0.1.0"
+description = "GraphRAG knowledge graph retrieval engine for Obsidian vaults"
+authors = [{ name = "Hermes + Vickry", email = "vickrycepuu@gmail.com" }]
+dependencies = [
+    "networkx>=3.0",
+    "pyyaml>=6.0",
+    "httpx>=0.25.0"
+]
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
